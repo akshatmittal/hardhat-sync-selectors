@@ -2,6 +2,11 @@
 
 Hardhat plugin to sync selectors/signatures with various open registries.
 
+Currently publishes all Events, Errors and Functions to the following directories:
+
+1. [Ethereum Signature Database](https://www.4byte.directory/)
+2. [OpenChain](https://openchain.xyz/signatures)
+
 ## Installation
 
 ```bash

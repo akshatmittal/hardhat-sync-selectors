@@ -1,7 +1,7 @@
 {
   "name": "hardhat-sync-selectors",
-  "version": "1.0.1",
-  "description": "Hardhat plugin to sync selectors",
+  "version": "1.0.2",
+  "description": "Hardhat plugin to sync selectors to various directories",
   "repository": "github:akshatmittal/hardhat-sync-selectors",
   "author": "Akshat Mittal",
   "license": "MIT",
@@ -50,6 +50,7 @@
   },
   "packageManager": "yarn@3.6.1",
   "dependencies": {
-    "axios": "^1.4.0"
+    "axios": "^1.4.0",
+    "ethers": "^6.0.0"
   }
 }
