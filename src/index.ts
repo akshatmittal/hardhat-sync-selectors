@@ -1,9 +1,10 @@
 import axios from "axios";
+import { ethers } from "ethers";
+
 import { task } from "hardhat/config";
 import { HardhatPluginError } from "hardhat/plugins";
 import { TASK_COMPILE } from "hardhat/builtin-tasks/task-names";
 import { type HardhatRuntimeEnvironment } from "hardhat/types";
-import { ethers } from "ethers";
 
 async function action(args: any, hre: HardhatRuntimeEnvironment) {
   if (!args.noCompile) {
@@ -32,21 +33,25 @@ async function action(args: any, hre: HardhatRuntimeEnvironment) {
       return e;
     });
 
-  const functionSigs = parsedComposite
+  if (parsedComposite.length === 0) {
+    throw new HardhatPluginError("hardhat-sync-selectors", "Nothing to sync!");
+  }
+
+  // This is a hack to get around the fact that ethers doesn't support named address types in ABIs.
+  // ...or quite possibly it's just a mistake that Hardhat/solc makes and everyone has accepted it.
+  const formattedComposite: any[] = JSON.parse(ethers.Interface.from(parsedComposite).formatJson());
+
+  const functionSigs = formattedComposite
     .filter((e) => e.type === "function")
     .map((e) => {
       return ethers.FunctionFragment.from(e).format("sighash");
     });
 
-  const eventSigs = parsedComposite
+  const eventSigs = formattedComposite
     .filter((e) => e.type === "event")
     .map((e) => {
       return ethers.EventFragment.from(e).format("sighash");
     });
-
-  if (parsedComposite.length === 0) {
-    throw new HardhatPluginError("hardhat-sync-selectors", "Nothing to sync!");
-  }
 
   console.log(`[Ethereum Signature Database] Syncing...`);
 
@@ -74,14 +79,14 @@ async function action(args: any, hre: HardhatRuntimeEnvironment) {
     })
     .then(({ data }) => {
       console.log(
-        `[OpenChain] Synced ${Object.entries(data.result.function.imported ?? {}).length} functions, skipping ${
-          Object.entries(data.result.function.duplicated ?? {}).length
-        } duplicates and ${Object.entries(data.result.function.invalid ?? {}).length} invalid items.`,
+        `[OpenChain] Synced ${Object.keys(data.result.function.imported ?? {}).length} functions, skipping ${
+          Object.keys(data.result.function.duplicated ?? {}).length
+        } duplicates and ${Object.keys(data.result.function.invalid ?? {}).length} invalid items.`,
       );
       console.log(
-        `[OpenChain] Synced ${Object.entries(data.result.event.imported ?? {}).length} events, skipping ${
-          Object.entries(data.result.event.duplicated ?? {}).length
-        } duplicates and ${Object.entries(data.result.event.invalid ?? {}).length} invalid items.`,
+        `[OpenChain] Synced ${Object.keys(data.result.event.imported ?? {}).length} events, skipping ${
+          Object.keys(data.result.event.duplicated ?? {}).length
+        } duplicates and ${Object.keys(data.result.event.invalid ?? {}).length} invalid items.`,
       );
     })
     .catch((error) => {
