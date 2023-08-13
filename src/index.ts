@@ -27,6 +27,7 @@ async function action(args: any, hre: HardhatRuntimeEnvironment) {
       if (e.type === "error") {
         // errors are same as functions
         e.type = "function";
+        e.stateMutability = "view";
         e.outputs = [];
       }
 
@@ -37,20 +38,20 @@ async function action(args: any, hre: HardhatRuntimeEnvironment) {
     throw new HardhatPluginError("hardhat-sync-selectors", "Nothing to sync!");
   }
 
-  // This is a hack to get around the fact that ethers doesn't support named address types in ABIs.
-  // ...or quite possibly it's just a mistake that Hardhat/solc makes and everyone has accepted it.
-  const formattedComposite: any[] = JSON.parse(ethers.Interface.from(parsedComposite).formatJson());
+  // // This is a hack to get around the fact that ethers doesn't support named address types in ABIs.
+  // // ...or quite possibly it's just a mistake that Hardhat/solc makes and everyone has accepted it.
+  const formattedComposite = JSON.parse(new ethers.utils.Interface(parsedComposite).format("json") as string) as any[];
 
   const functionSigs = formattedComposite
     .filter((e) => e.type === "function")
     .map((e) => {
-      return ethers.FunctionFragment.from(e).format("sighash");
+      return ethers.utils.FunctionFragment.from(e).format("sighash");
     });
 
   const eventSigs = formattedComposite
     .filter((e) => e.type === "event")
     .map((e) => {
-      return ethers.EventFragment.from(e).format("sighash");
+      return ethers.utils.EventFragment.from(e).format("sighash");
     });
 
   console.log(`[Ethereum Signature Database] Syncing...`);
@@ -61,7 +62,7 @@ async function action(args: any, hre: HardhatRuntimeEnvironment) {
     })
     .then(({ data }) => {
       console.log(
-        `[Ethereum Signature Database] Synced ${data.num_processed} unique items from ${allArtifactNames.length} individual ABIs adding ${data.num_imported} new selectors to database with ${data.num_duplicates} duplicates and ${data.num_ignored} ignored items.`,
+        `[Ethereum Signature Database] Synced ${data.num_processed} items from ${allArtifactNames.length} individual ABIs adding ${data.num_imported} new selectors to database with ${data.num_duplicates} duplicates and ${data.num_ignored} ignored items.`,
       );
     })
     .catch((error) => {
