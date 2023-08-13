@@ -35,5 +35,6 @@ This plugin adds the following tasks to Hardhat:
 Both tasks are exactly the same and upload signatures from all your contracts.
 
 ```bash
-yarn hardhat sync-selectors
+yarn hardhat sync-selectors # compiles all contracts and syncs selectors
+yarn hardhat sync-selectors --no-compile # skips compiling before syncing selectors
 ```
